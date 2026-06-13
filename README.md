@@ -28,7 +28,7 @@ The [ImHex](https://imhex.werwolv.net/) patterns are for the on-disk format of `
 
 ## Configs
 
-The ScyllaHide config should keep the anti-debug off your back. The patch file for xlive 3.5.95.0 neutralizes the `PEVerifyHash` check (`?PEVerifyHash@CPEMgr@@AAEJPAVCHashMgr@@IPAVC_LOADED_MODULE_LIST@@@Z`, the famous `8B FF 55 8B EC 83 EC 20 53 56 57 8D 45 E0 33 F6 50 FF 75 0C 8B F9` signature) which should let you put breakpoints in more places without getting killed. There are countless other checks for IAT, single step exceptions, etc..., but this gets you 99% of the way there. And a lot of that other stuff gets patched at runtime by WARBIRD so it's harder to nop out like this. You'll also want exceptions set to Break On: Second Chance, Logging: Log exception, Exception handled by: Debuggee, since xlive uses SEH to catch divisions by zero and access violations it causes on purpose.
+The ScyllaHide config should keep the anti-debug off your back. The patch file for xlive 3.5.95.0 neutralizes the `PEVerifyHash` check (the famous `8B FF 55 8B EC 83 EC 20 53 56 57 8D 45 E0 33 F6 50 FF 75 0C 8B F9` signature) which should let you put breakpoints in more places without getting killed. There are countless other checks for IAT, single step exceptions, etc..., but this gets you 99% of the way there. And a lot of that other stuff gets patched at runtime by WARBIRD so it's harder to nop out like this. You'll also want exceptions set to Break On: Second Chance, Logging: Log exception, Exception handled by: Debuggee, since xlive uses SEH to catch divisions by zero and access violations it causes on purpose.
 
 ## Scripts
 
@@ -46,11 +46,27 @@ For some reason Microsoft decided that they wanted to protect `XLiveProtectData`
 
 This [Syncrosoft MCFACT PowerPoint](http://re-trust.dit.unitn.it/files/20080311Doc/harder-Syncrosoft-MCFACT.pdf) from the Re-trust Sixth Quarterly Meeting (March 11, 2008) is the holy grail. It details how it works and shows code snippets. Unfortunately MCFACT is pretty good and I believe them when they say it can't be decomposed. So I just yanked the lookup tables and driver code out of the dll wholesale.
 
+### Protected/Secure Buffer
+
+A lot of the sensitive internal functions take byte array arguments in the form of a protected/secure buffer. Types like `SB_PTR<unsigned char>` (secure buffer pointer), `__SecureBufferHandleStruct *`, and `CSBPseudoPtr` (C small buffer pseudo pointer) are frequently seen around this code. The general idea is to make it harder to find/peek/poke the contents of these arrays in memory, shocker.
+
+In `XLiveInitialize` a number derived from the tick count is stored on the heap and remains constant until it is deallocated in `XLiveUninitialize`. `__SecureBufferHandleStruct *` is a pointer to a `CSBPseudoPtr` that has had the constant added to it. It is then subtracted every time it is accessed. `CSBPseudoPtr` has a mechanism to, instead of storing the array value directly, store two arrays with values that XOR together to make the original array value. This means that all accesses to these arrays have to flow through functions like `SBufferGetByte` and `SBufferSetByte`.
+
+This is the mechanism behind `XLIVE_PROTECTED_BUFFER` (which is just a type erased `__SecureBufferHandleStruct *`) and the associated exports: `XLivePBufferAllocate`, `XLivePBufferFree`, `XLivePBufferGetByte`, `XLivePBufferSetByte`, `XLivePBufferGetDWORD`, `XLivePBufferSetDWORD`, `XLivePBufferGetByteArray`, and `XLivePBufferSetByteArray`.
+
 ### AES Whitebox
 
-The AES block cypher code is a "whitebox" implementation, if you even want to call it that. They just bake the primitives and round keys into lookup tables instead of doing it procedurally. g_pcbcObfuscation, g_pcbcXLiveDRM, and g_pcbcXLiveUserData don't even use the standard number of rounds or have a master key that the round keys can be derived from with a key schedule algorithm. g_pcbcSystemLink uses the standard number of rounds and has a recoverable master key from the real AES-128 key schedule, but it was already known from the Xbox 360.
+The AES block cypher code is a "whitebox" implementation, if you even want to call it that. They just bake the primitives and round keys into lookup tables instead of doing it procedurally. Since the AES functions all use the secure buffer construct it is trivial to hook the get/set functions and trace the whole data flow. It only takes at most 3 of these traces to pin every round key.
 
 This whitebox isn't MCFACT, it's their own thing. I don't know why they decided to do their own thing when MCFACT advertises a comprehensive cryptography toolbox that includes AES, but maybe that wasn't available at the time, I'm not certain on the timeline.
+
+### Why do the AES Keys Look Like That?
+
+`g_pcbcSystemLink` uses standard AES-128. Its round keys really are the output of a normal AES-128 key schedule, and that schedule is invertible, so you can run it backwards from any complete round key and collapse them all into a single 16-byte master key. I did exactly that and compared it with the known Xbox 360 key and it matched.
+
+`g_pcbcObfuscation`, `g_pcbcXLiveDRM`, and `g_pcbcXLiveUserData` are a different story. They use a non-standard number of rounds and none of their round key transitions follow the schedule, so there's nothing to invert and no 16-byte master key to collapse them into. None of this is about recovering the keys, the round keys aren't hidden, they're sitting in the lookup tables and I've already extracted them. The only question is whether they compress back down to a smaller master key, and for these three they don't. The round keys themselves are the complete key material.
+
+The one thing I can't rule out is that Microsoft cooked them up from some smaller seed with a custom routine instead of the standard schedule. But even if they did, it still wouldn't get you a master key. A key schedule worth using is indistinguishable from random without the seed, so the round keys won't leak it, and whatever seed existed wouldn't be an AES master key you reach by inverting a schedule anyway. Cracking that generator would be its own project, not a matter of squeezing the round keys down a little harder. For the round keys themselves, what we have is everything there is to get.
 
 ## Other Stuff
 
