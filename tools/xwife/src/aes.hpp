@@ -8,6 +8,8 @@
 
 HRESULT ObfuscationEncryptBlock(SB_PTR<unsigned char> plain, SB_PTR<unsigned char> cypher, unsigned long sixteen);
 HRESULT ObfuscationDecryptBlock(SB_PTR<unsigned char> cypher, SB_PTR<unsigned char> plain, unsigned long sixteen);
+HRESULT DRMEncryptBlock(SB_PTR<unsigned char> plain, SB_PTR<unsigned char> cypher, unsigned long sixteen);
+HRESULT DRMDecryptBlock(SB_PTR<unsigned char> cypher, SB_PTR<unsigned char> plain, unsigned long sixteen);
 HRESULT SystemLinkEncryptBlock(SB_PTR<unsigned char> plain, SB_PTR<unsigned char> cypher, unsigned long sixteen);
 HRESULT SystemLinkDecryptBlock(SB_PTR<unsigned char> cypher, SB_PTR<unsigned char> plain, unsigned long sixteen);
 HRESULT UserDataEncryptBlock(SB_PTR<unsigned char> plain, SB_PTR<unsigned char> cypher, unsigned long sixteen);

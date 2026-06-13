@@ -17,7 +17,7 @@ enum class SP_CRYPTO_VAULT_TYPE : int {
     NONE = 0,
     OBFUSCATE = 1,
     SYSTEM_LINK = 2,
-    // DRM = 3,
+    DRM = 3,
     USER_DATA = 4
 };
 
@@ -50,7 +50,7 @@ public:
 };
 
 extern PanoramaCryptoCBC *g_pcbcObfuscation;
-// extern PanoramaCryptoCBC *g_pcbcXLiveDRM;
+extern PanoramaCryptoCBC *g_pcbcXLiveDRM;
 extern PanoramaCryptoCBC *g_pcbcSystemLink;
 extern PanoramaCryptoCBC *g_pcbcXLiveUserData;
 

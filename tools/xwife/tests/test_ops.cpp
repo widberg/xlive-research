@@ -129,6 +129,7 @@ TEST_CASE("encrypt golden + decrypt round-trip", "[crypto]") {
     const CipherCase cc = GENERATE(
         CipherCase{"obfuscate", SP_CRYPTO_VAULT_TYPE::OBFUSCATE},
         CipherCase{"system_link", SP_CRYPTO_VAULT_TYPE::SYSTEM_LINK},
+        CipherCase{"drm", SP_CRYPTO_VAULT_TYPE::DRM},
         CipherCase{"user_data", SP_CRYPTO_VAULT_TYPE::USER_DATA});
     const PadCase pc =
         GENERATE(PadCase{"none", SP_CRYPTO_CIPHER_PADDING_TYPE::NONE},

@@ -90,6 +90,13 @@ OBFUSCATION = [  # 11 rounds, 12 independent round keys
  _h("90ccfb806fe48476b5c9f2b1baeed91b"), _h("619d2612f151dd929e25cbd72bec3966"),
  _h("9102e07df09fc66f01ce1bfd558a9fab"), _h("7e66a6cdef6446b01ffb80df1e359b22"),
  _h("439e0cd93df8aa14d29ceca4cd676c7b"), _h("d352f75958f6c7bf650e6dabb792810f")]
+DRM = [  # 11 rounds, 12 independent round keys
+ _h("d56e26bad535c316ac8dbb2dd636983c"), _h("9784a10c8b5cd8325e691b24f2e4a009"),
+ _h("24d23835b356993938b2ca5f66dbd17b"), _h("943f7172b0ed494703bbd07ed6c23924"),
+ _h("b019e85f2426992d94cbd06a97700014"), _h("8fa1c3ac3fb82bf31b9eb2de8f5562b4"),
+ _h("182562a0a00b23019fb308f2842dba2c"), _h("0b78d898135dba38ccff247c534c2c8e"),
+ _h("d76196a2dc194e3acf44f402974053f6"), _h("c40c7f78136de9dacf74a7e0003053e2"),
+ _h("13adcb95d7a1b4edc4cc5d370bb8fad7"), _h("0b88a935cc7e5dbe1bdfe953df13b464")]
 SYSTEM_LINK = aes128_schedule(bytes.fromhex("64fa1ac20fd75807cae674baa3b4787f"))  # 10 rounds, real AES-128
 
 if __name__ == "__main__":
@@ -97,9 +104,10 @@ if __name__ == "__main__":
     KAT = {  # all-zero plaintext -> DLL oracle ciphertext
         "user_data":   "016ac0f8839dcaff59b811a2c94d4f9e",
         "obfuscation": "c2cd4e6ce71fe253fc32e0d28a9ca4be",
+        "drm": "acddaaaf3d213c2dcbdc8a8db64dfcdd",
         "system_link": "3daac8806b5e5fdaffdbd204f0ed8920",
     }
-    for name, W in (("user_data", USER_DATA), ("obfuscation", OBFUSCATION), ("system_link", SYSTEM_LINK)):
+    for name, W in (("user_data", USER_DATA), ("obfuscation", OBFUSCATION), ("drm", DRM), ("system_link", SYSTEM_LINK)):
         z = encrypt(bytes(16), W).hex()
         rt = all((lambda p: decrypt(encrypt(p, W), W) == p)(os.urandom(16)) for _ in range(2000))
         tag = ""

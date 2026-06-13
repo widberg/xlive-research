@@ -16,7 +16,7 @@ void AddCryptoCommand(CLI::App& app, const char* name, bool encrypt,
     static const std::map<std::string, SP_CRYPTO_VAULT_TYPE> cipher_map{
         {"obfuscate", SP_CRYPTO_VAULT_TYPE::OBFUSCATE},
         {"system_link", SP_CRYPTO_VAULT_TYPE::SYSTEM_LINK},
-        // {"drm", SP_CRYPTO_VAULT_TYPE::DRM},
+        {"drm", SP_CRYPTO_VAULT_TYPE::DRM},
         {"user_data", SP_CRYPTO_VAULT_TYPE::USER_DATA},
     };
     static const std::map<std::string, SP_CRYPTO_CIPHER_PADDING_TYPE> padding_map{

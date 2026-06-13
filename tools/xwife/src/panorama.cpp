@@ -32,6 +32,8 @@ HRESULT PanoramaCryptoCBC::BlockEncrypt(SB_PTR<unsigned char> plain, unsigned lo
         return ObfuscationEncryptBlock(plain, cypher, sixteen);
     case SP_CRYPTO_VAULT_TYPE::SYSTEM_LINK:
         return SystemLinkEncryptBlock(plain, cypher, sixteen);
+    case SP_CRYPTO_VAULT_TYPE::DRM:
+        return DRMEncryptBlock(plain, cypher, sixteen);
     case SP_CRYPTO_VAULT_TYPE::USER_DATA:
         return UserDataEncryptBlock(plain, cypher, sixteen);
     default:
@@ -47,8 +49,8 @@ HRESULT PanoramaCryptoCBC::BlockDecrypt(SB_PTR<unsigned char> cypher, unsigned l
         return ObfuscationDecryptBlock(cypher, plain, sixteen);
     case SP_CRYPTO_VAULT_TYPE::SYSTEM_LINK:
         return SystemLinkDecryptBlock(cypher, plain, sixteen);
-    // case SP_CRYPTO_VAULT_TYPE::DRM:
-    //     return DRMDecryptBlock(cypher, plain, sixteen);
+    case SP_CRYPTO_VAULT_TYPE::DRM:
+        return DRMDecryptBlock(cypher, plain, sixteen);
     case SP_CRYPTO_VAULT_TYPE::USER_DATA:
         return UserDataDecryptBlock(cypher, plain, sixteen);
     default:
@@ -750,7 +752,7 @@ HRESULT PanoramaCryptoCBC::Decrypt(SB_PTR<unsigned char> cypher, unsigned long c
 PanoramaCryptoCBC *g_pcbcObfuscation = nullptr;
 
 // ?g_pcbcXLiveDRM@@3PAVPanoramaCryptoCBC@@A
-// PanoramaCryptoCBC *g_pcbcXLiveDRM = nullptr;
+PanoramaCryptoCBC *g_pcbcXLiveDRM = nullptr;
 
 // ?g_pcbcSystemLink@@3PAVPanoramaCryptoCBC@@A
 PanoramaCryptoCBC *g_pcbcSystemLink = nullptr;
@@ -770,8 +772,8 @@ HRESULT InitializeKeyVaults() {
     g_pcbcSystemLink = new PanoramaCryptoCBC;
     g_pcbcSystemLink->SetBlockCipher(SP_CRYPTO_VAULT_TYPE::SYSTEM_LINK);
 
-    // g_pcbcXLiveDRM = new PanoramaCryptoCBC;
-    // g_pcbcXLiveDRM->SetBlockCipher(SP_CRYPTO_VAULT_TYPE::DRM);
+    g_pcbcXLiveDRM = new PanoramaCryptoCBC;
+    g_pcbcXLiveDRM->SetBlockCipher(SP_CRYPTO_VAULT_TYPE::DRM);
 
     g_pcbcXLiveUserData = new PanoramaCryptoCBC;
     g_pcbcXLiveUserData->SetBlockCipher(SP_CRYPTO_VAULT_TYPE::USER_DATA);
@@ -787,8 +789,8 @@ void ShutDownKeyVaults() {
     delete g_pcbcSystemLink;
     g_pcbcSystemLink = nullptr;
 
-    // delete g_pcbcXLiveDRM;
-    // g_pcbcXLiveDRM = nullptr;
+    delete g_pcbcXLiveDRM;
+    g_pcbcXLiveDRM = nullptr;
 
     delete g_pcbcXLiveUserData;
     g_pcbcXLiveUserData = nullptr;
