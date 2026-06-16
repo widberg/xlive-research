@@ -6,7 +6,7 @@
 #include "aes.hpp"
 
 // AES primitives
-// All three xlive crypto whiteboxes are the same engine: the standard AES
+// All four xlive crypto whiteboxes are the same engine: the standard AES
 // round function (SubBytes, ShiftRows, MixColumns, AddRoundKey). They differ
 // only in the round count and where the round keys come from. The primitives
 // below operate on plain 16-byte unsigned char arrays. The state is stored
